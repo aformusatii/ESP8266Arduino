@@ -2,7 +2,6 @@
 #include <WiFiClient.h>
 #include <ESP8266WebServer.h>
 #include <ESP8266mDNS.h>
-// #include <SimpleTimer.h>
 #include <WiFiUDP.h>
 
 #define GPIO_PIN_A 10
