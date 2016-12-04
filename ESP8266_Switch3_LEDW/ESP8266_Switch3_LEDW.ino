@@ -7,7 +7,7 @@
 #define GPIO_POUT_A 5
 
 const char* ssid = "DEFENDOR";
-const char* password = "PIC12F675TDA9811";
+const char* password = "****";
 
 volatile bool udpConnected = false;
 volatile bool out_port_status = false;

@@ -8,7 +8,7 @@
 #define GPIO_POUT_A 4
 
 const char* ssid = "DEFENDOR";
-const char* password = "PIC12F675TDA9811";
+const char* password = "****";
 
 volatile unsigned long trigger_at_a_millis = 0;
 volatile bool port_a_trigger = false;
