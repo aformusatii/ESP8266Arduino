@@ -13,7 +13,7 @@
 #define GPIO_POUT_B    12
 
 const char* ssid = "DEFENDOR";
-const char* password = "PIC12F675TDA9811";
+const char* password = "****";
 
 volatile unsigned long trigger_at_a_millis = 0;
 volatile unsigned long trigger_at_b_millis = 0;
