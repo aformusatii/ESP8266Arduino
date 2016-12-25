@@ -2,6 +2,7 @@
 #include <WiFiClient.h>
 #include <ESP8266WebServer.h>
 #include <ESP8266mDNS.h>
+#include <ESP8266HTTPUpdateServer.h>
 #include <WiFiUDP.h>
 
 #define GPIO_PIN_A_1   5
@@ -12,8 +13,12 @@
 #define GPIO_PIN_B_1   4
 #define GPIO_POUT_B    12
 
+const char* host = "switch4";
 const char* ssid = "DEFENDOR";
-const char* password = "****";
+const char* password = "PIC12F675TDA9811";
+
+volatile unsigned long wifi_check_status_millis = 0;
+volatile unsigned long wifi_check_rssi_millis = 0;
 
 volatile unsigned long trigger_at_a_millis = 0;
 volatile unsigned long trigger_at_b_millis = 0;
@@ -29,9 +34,6 @@ volatile int port_a_2_value = LOW;
 volatile int port_a_3_value = LOW;
 volatile int port_b_1_value = LOW;
 
-boolean udpConnected = false;
-char udpPacketBuffer[UDP_TX_PACKET_MAX_SIZE]; //buffer to hold incoming packet,
-
 // A UDP instance to let us send and receive packets over UDP
 WiFiUDP Udp;
 
@@ -40,6 +42,7 @@ IPAddress ipMulti(239, 0, 0, 1);
 unsigned int portMulti = 6000;      // local port to listen on
 
 ESP8266WebServer server(80);
+ESP8266HTTPUpdateServer httpUpdater;
 
 void indexPage() {
   String message = "<!doctype html>";
@@ -49,6 +52,18 @@ void indexPage() {
   message += "</head>";
 
   message += "<body>";
+
+  /*
+    Signal Strength TL;DR   Required for
+    -30 dBm Amazing Max achievable signal strength. The client can only be a few feet from the AP to achieve this. Not typical or desirable in the real world.  N/A
+    -67 dBm Very Good Minimum signal strength for applications that require very reliable, timely delivery of data packets. VoIP/VoWiFi, streaming video
+    -70 dBm Okay  Minimum signal strength for reliable packet delivery. Email, web
+    -80 dBm Not Good  Minimum signal strength for basic connectivity. Packet delivery may be unreliable.  N/A
+    -90 dBm Unusable  Approaching or drowning in the noise floor. Any functionality is highly unlikely. N/A
+  */
+  message += "RSSI: ";
+  message.concat(WiFi.RSSI());
+  message += "<br/>";
   
   message += "<a href=\"/switchOnA\">SwitchOn A</a><br/>";
   message += "<a href=\"/switchOffA\">SwitchOff A</a><br/>";
@@ -59,6 +74,8 @@ void indexPage() {
   message += "<a href=\"/switchOffB\">SwitchOff B</a><br/>";
   message += "<a href=\"/switchToggleB\">SwitchToggle B</a><br/>";
   message += "<a href=\"/statusB\">Status B</a><br/>";
+
+  message += "<form method='POST' action='/update' enctype='multipart/form-data'><input type='file' name='update'><input type='submit' value='Update'></form>";
   
   message += "</body>";
   
@@ -157,9 +174,11 @@ void setupGPIO() {
   pinMode(GPIO_PIN_A_2, INPUT);
   pinMode(GPIO_PIN_A_3, INPUT);
   pinMode(GPIO_POUT_A, OUTPUT);
-
+  digitalWrite(GPIO_POUT_A, LOW);
+  
   pinMode(GPIO_PIN_B_1, INPUT);
   pinMode(GPIO_POUT_B, OUTPUT);
+  digitalWrite(GPIO_POUT_B, LOW);
 
   delay(200);
 
@@ -176,6 +195,8 @@ void setupGPIO() {
 }
 
 void setup(void) {
+  setupGPIO();
+  
   Serial.begin(115200);
 
   WiFi.begin(ssid, password);
@@ -193,35 +214,18 @@ void setup(void) {
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
 
-  udpConnected = connectUDP();
-
-  if (MDNS.begin("esp8266")) {
-    Serial.println("MDNS responder started");
-  }
+  MDNS.begin(host);
 
   setupHTTPActions();
 
+  httpUpdater.setup(&server);
+
   server.begin();
+
+  MDNS.addService("http", "tcp", 80);
+  
   Serial.println("HTTP server started");
-
-  setupGPIO();
-}
-
-// connect to UDP – returns true if successful or false if not
-boolean connectUDP() {
-    boolean state = false;
-
-    Serial.println("");
-    Serial.println("Connecting to UDP");
-
-    if(Udp.beginMulticast(WiFi.localIP(), ipMulti, portMulti) == 1) {
-        Serial.println("Connection successful");
-        state = true;
-    } else {
-        Serial.println("Connection failed");
-    }
-
-    return state;
+  Serial.println("v0.1");
 }
 
 // ============ Port A ============
@@ -283,13 +287,15 @@ void setPortStateB(bool state) {
 // ============= Main Loop =============
 void loop(void) {
   server.handleClient();
+
+  long currentTime = millis();
   
-  if (port_a_trigger && (trigger_at_a_millis < millis())) {
+  if (port_a_trigger && (trigger_at_a_millis < currentTime)) {
     port_a_trigger = false;
     changeCallbackA();
   }
 
-  if (port_b_trigger && (trigger_at_b_millis < millis())) {
+  if (port_b_trigger && (trigger_at_b_millis < currentTime)) {
     port_b_trigger = false;
     changeCallbackB();
   }
@@ -312,10 +318,24 @@ void loop(void) {
     changeBInterrupt();
   }
 
-  port_b_1_value = b1;
+  port_b_1_value = b1;  
 
-  /* if (digitalRead(GPIO_PIN_B_1) == HIGH) {
-    Serial.println("GPIO_PIN_B_1 HIGH");
-  }*/
+  /* if (currentTime > wifi_check_status_millis) {
+    wifi_check_status_millis = millis() + 2000;
   
+    Serial.println(WiFi.status());
+    
+    if (WiFi.status() != WL_CONNECTED) {
+      changeCallbackA();
+    }
+  }
+
+  if (currentTime > wifi_check_rssi_millis) {
+    wifi_check_rssi_millis = millis() + 10000;
+
+    long rssi = WiFi.RSSI();
+    Serial.print("RSSI:");
+    Serial.println(rssi);
+  } */
+
 }
