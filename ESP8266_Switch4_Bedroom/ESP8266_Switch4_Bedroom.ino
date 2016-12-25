@@ -15,7 +15,7 @@
 
 const char* host = "switch4";
 const char* ssid = "DEFENDOR";
-const char* password = "PIC12F675TDA9811";
+const char* password = "****";
 
 volatile unsigned long wifi_check_status_millis = 0;
 volatile unsigned long wifi_check_rssi_millis = 0;
