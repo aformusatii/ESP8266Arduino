@@ -94,6 +94,8 @@ void setup(void) {
   
   Serial.begin(250000, SERIAL_8O2);
 
+  //WiFi.mode(WIFI_STA);
+
   WiFi.begin(ssid, password);
   Serial.println("");
 
