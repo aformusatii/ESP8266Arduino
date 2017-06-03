@@ -7,13 +7,12 @@
 #include <NDIRZ16.h>
 #include <SC16IS750.h>
 #include <ESP8266HTTPClient.h>
+#include <WiFiConfig.h>
 
 #define SENSOR_READ_AND_SEND_INTERVAL_MIN  15
 #define SENSOR_INITIALIZATION_INTERVAL_SEC  200
 
 const char* host = "MHZ16-1";
-const char* ssid = "DEFENDOR";
-const char* password = "****";
 
 volatile unsigned long timer_sensor_initialization = 0;
 volatile unsigned long timer_sensor_read_and_send = 0;
@@ -207,7 +206,7 @@ void sendData(char writeBuffer[]) {
 
 void sendSensorDataOvertHttp(uint32_t ppm, uint8_t  temperature) {
     char url[255];
-    sprintf(url, "http://192.168.1.116/misc/save_sensor_data_http.php?sensor=3&type=4&value=%d\n", ppm);
+    sprintf(url, "http://192.168.1.116/misc/save_sensor_data_http.php?sensor=3&type=4&value=%d", ppm);
     
     HTTPClient http;
     http.begin(url);

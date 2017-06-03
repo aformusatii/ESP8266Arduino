@@ -165,7 +165,7 @@ void setupHTTPActions() {
   server.onNotFound(handleNotFound);
 }
 
-void setupGPIO() {
+void setupGPIO() { 
   pinMode(GPIO_POUT_A, OUTPUT);
   digitalWrite(GPIO_POUT_A, LOW);
 
