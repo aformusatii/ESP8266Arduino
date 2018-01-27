@@ -17,18 +17,18 @@ Wireless Environment Sensor.
 
 ###### Circuit diagram:
 
-![circuit diagram](/docs/EMV2.png?raw=true "Sensor circuit diagram")
+![circuit diagram](docs/EMV2.png?raw=true "Sensor circuit diagram")
 
 ###### Prototype PCB:
 
-![prototype pcb](/docs/the_device.jpg?raw=true "Prototype PCB")
+![prototype pcb](docs/the_device.jpg?raw=true "Prototype PCB")
 
 ###### BME/BMP280 breakout board modification to work only with 3.3V:
 
-![breakout board](/docs/BME280Breakout.png?raw=true "Breakout Board")
+![breakout board](docs/BME280Breakout.png?raw=true "Breakout Board")
 
 ###### Prototype components price:
 
-![prototype components](/docs/price.png?raw=true "prototype components")
+![prototype components](docs/price.png?raw=true "prototype components")
 
 Total: ~$30
