@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang='en'>
+  <head>
+	<title>Environment Sensor V2</title>
+	<style>
+	.box {padding: 10px;border: dashed 1px black;margin-top: 10px;background-color: #90b3ed;} h2 {margin: 0;} span.desc {font-style: italic;font-size: 12px;} form {margin: 10px 0 0 0; padding: 10px; background-color: #f4df42;} 
+	span.val {width: 100px;display: inline-block;}
+	</style>
+  </head>
+  <body>
+  
+  <div class='box'><h2>Envirnment Sensor V2</h2></div>
+  
+  <div class='box'><h2>Sensor Data</h2>
+  <span class='val'>Temperature:</span> 0<br/>
+  <span class='val'>Humidity:</span> 	0<br/>
+  <span class='val'>Pressure:</span> 	0<br/>
+  <span class='val'>PM 1.0:</span>   	0<br/>
+  <span class='val'>PM 2.5:</span>   	0<br/>
+  <span class='val'>PM10.0:</span>   	0<br/>
+  <a href='sensor'>Get Sensor Data (available as JSON and JSONP)</a>
+  </div>
+  
+  <div class='box'>
+  <h2>WiFi Settings</h2>
+  Current Signal Strength: -62<br/>
+  <span class='desc'>
+    Signal Strength TL;DR   Required for<br/>
+    -30 dBm Amazing Max achievable signal strength. The client can only be a few feet from the AP to achieve this. Not typical or desirable in the real world.  N/A<br/>
+    -67 dBm Very Good Minimum signal strength for applications that require very reliable, timely delivery of data packets. VoIP/VoWiFi, streaming video<br/>
+    -70 dBm Okay  Minimum signal strength for reliable packet delivery. Email, web<br/>
+    -80 dBm Not Good  Minimum signal strength for basic connectivity. Packet delivery may be unreliable.  N/A<br/>
+    -90 dBm Unusable  Approaching or drowning in the noise floor. Any functionality is highly unlikely. N/A<br/>
+  </span>
+  <a href='reset'>Reset WiFi configuration</a><br/>
+  </div>
+
+  <div class='box'>
+  <h2>Firmware:</h2>
+  <a href='https://github.com/aformusatii/ESP8266Arduino/tree/master/ESP8266_EnvironmentSensorV2'>Git Repository</a></br>
+  <form method='POST' action='/update' enctype='multipart/form-data'><input type='file' name='update'><input type='submit' value='Update'></form>
+  </div>
+  
+  </body>
+</html>

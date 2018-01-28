@@ -59,35 +59,62 @@ volatile bool softAP = false;
 
 
 void handleRoot() {
-  String message = "<!doctype html>";
-  message += "<html lang=\"en\">";
-  message += "<head>";
-  message += "<title>Environment Sensor V2</title>";
-  message += "</head>";
+  String message = "";
+
+  // see docs/template.html
   
-  message += "<body>";
-
-  /*
-    Signal Strength TL;DR   Required for
-    -30 dBm Amazing Max achievable signal strength. The client can only be a few feet from the AP to achieve this. Not typical or desirable in the real world.  N/A
-    -67 dBm Very Good Minimum signal strength for applications that require very reliable, timely delivery of data packets. VoIP/VoWiFi, streaming video
-    -70 dBm Okay  Minimum signal strength for reliable packet delivery. Email, web
-    -80 dBm Not Good  Minimum signal strength for basic connectivity. Packet delivery may be unreliable.  N/A
-    -90 dBm Unusable  Approaching or drowning in the noise floor. Any functionality is highly unlikely. N/A
-  */
-  message += "RSSI: ";
-  message.concat(WiFi.RSSI());
-  message += "<br/>";
-
-  message += "<a href=\"/reset\">Reset WiFi configuration</a><br/>";
-  message += "<a href=\"/sensor\">Get Sensor Data</a><br/>";
-
-  message += "Firmware:<br/>";
-
-  message += "<form method='POST' action='/update' enctype='multipart/form-data'><input type='file' name='update'><input type='submit' value='Update'></form>";
-  
-  message += "</body>";  
-  message += "</html>";
+  message =  "<!doctype html>                                                                                                                                                                                                                                  ";
+  message += "<html lang='en'>                                                                                                                                                                                                                                 ";
+  message += "  <head>                                                                                                                                                                                                                                         ";
+  message += "  <title>Environment Sensor V2</title>                                                                                                                                                                                                           ";
+  message += "  <style>                                                                                                                                                                                                                                        ";
+  message += "  .box {padding: 10px;border: dashed 1px black;margin-top: 10px;background-color: #90b3ed;} h2 {margin: 0;} span.desc {font-style: italic;font-size: 12px;} form {margin: 10px 0 0 0; padding: 10px; background-color: #f4df42;}                 ";
+  message += "  span.val {width: 100px;display: inline-block;}                                                                                                                                                                                                 ";
+  message += "  </style>  ";
+  message += "  </head>                                                                                                                                                                                                                                        ";
+  message += "  <body>                                                                                                                                                                                                                                         ";
+  message += "                                                                                                                                                                                                                                                 ";
+  message += "  <div class='box'><h2>Envirnment Sensor V2</h2></div>                                                                                                                                                                                           ";
+  message += "                                                                                                                                                                                                                                                 ";
+  message += "  <div class='box'><h2>Sensor Data</h2>                                                                                                                                                                                                          ";
+  message += "  <span class='val'>Temperature:</span>                                                                                                                                                                                                          ";
+  message.concat(temperature); message.concat(" C</br>");
+  message += "  <span class='val'>Humidity:</span>                                                                                                                                                                                                             ";
+  message.concat(humidity); message.concat(" %</br>");
+  message += "  <span class='val'>Pressure:</span>                                                                                                                                                                                                             ";
+  message.concat(pressure); message.concat(" hPa</br>");
+  message += "  <span class='val'>PM 1.0:</span>                                                                                                                                                                                                               ";
+  message.concat(PM_AE_UG_1_0); message.concat(" (ug/m3)</br>");
+  message += "  <span class='val'>PM 2.5:</span>                                                                                                                                                                                                               ";
+  message.concat(PM_AE_UG_2_5); message.concat(" (ug/m3)</br>");
+  message += "  <span class='val'>PM10.0:</span>                                                                                                                                                                                                               ";
+  message.concat(PM_AE_UG_10_0); message.concat(" (ug/m3)</br>");
+  message += "  <a href='sensor'>Get Sensor Data (available as JSON and JSONP)</a>                                                                                                                                                                             ";
+  message += "  </div>                                                                                                                                                                                                                                         ";
+  message += "                                                                                                                                                                                                                                                 ";
+  message += "  <div class='box'>                                                                                                                                                                                                                              ";
+  message += "  <h2>WiFi Settings</h2>                                                                                                                                                                                                                         ";
+  message += "  Current Signal Strength:                                                                                                                                                                                                                       ";
+  message.concat(WiFi.RSSI()); message.concat("</br>");
+  message += "  <span class='desc'>                                                                                                                                                                                                                            ";
+  message += "    Signal Strength TL;DR   Required for<br/>                                                                                                                                                                                                    ";
+  message += "    -30 dBm Amazing Max achievable signal strength. The client can only be a few feet from the AP to achieve this. Not typical or desirable in the real world.  N/A<br/>                                                                         ";
+  message += "    -67 dBm Very Good Minimum signal strength for applications that require very reliable, timely delivery of data packets. VoIP/VoWiFi, streaming video<br/>                                                                                    ";
+  message += "    -70 dBm Okay  Minimum signal strength for reliable packet delivery. Email, web<br/>                                                                                                                                                          ";
+  message += "    -80 dBm Not Good  Minimum signal strength for basic connectivity. Packet delivery may be unreliable.  N/A<br/>                                                                                                                               ";
+  message += "    -90 dBm Unusable  Approaching or drowning in the noise floor. Any functionality is highly unlikely. N/A<br/>                                                                                                                                 ";
+  message += "  </span>                                                                                                                                                                                                                                        ";
+  message += "  <a href='reset'>Reset WiFi configuration</a><br/>                                                                                                                                                                                              ";
+  message += "  </div>                                                                                                                                                                                                                                         ";
+  message += "                                                                                                                                                                                                                                                 ";
+  message += "  <div class='box'>                                                                                                                                                                                                                              ";
+  message += "  <h2>Firmware:</h2>                                                                                                                                                                                                                             ";
+  message += "  <a href='https://github.com/aformusatii/ESP8266Arduino/tree/master/ESP8266_EnvironmentSensorV2'>Git Repository</a></br>                                                                                                                        ";
+  message += "  <form method='POST' action='/update' enctype='multipart/form-data'><input type='file' name='update'><input type='submit' value='Update'></form>                                                                                                ";
+  message += "  </div>                                                                                                                                                                                                                                         ";
+  message += "                                                                                                                                                                                                                                                 ";
+  message += "  </body>                                                                                                                                                                                                                                        ";
+  message += "</html>                                                                                                                                                                                                                                          ";
 
   server->send(200, "text/html", message);
 }
@@ -234,15 +261,15 @@ void pmsSensorRead() {
     
     pms.requestRead();
 
-    if (pms.read(data, 1000)) {
+    if (pms.read(data, 3000)) {
       PM_AE_UG_1_0 = data.PM_AE_UG_1_0;
       PM_AE_UG_2_5 = data.PM_AE_UG_2_5;
       PM_AE_UG_10_0 = data.PM_AE_UG_10_0;
 
-      pms.sleep();
-
       refreshDisplay();
     }
+
+    pms.sleep();
   }
 }
 
