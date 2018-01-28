@@ -19,6 +19,9 @@ volatile bool port_b_trigger = false;
 
 volatile bool out_port_status = false;
 
+volatile int port_a_value = LOW;
+volatile int port_b_value = LOW;
+
 // A UDP instance to let us send and receive packets over UDP
 WiFiUDP Udp;
 
@@ -141,10 +144,8 @@ void setup(void) {
 
   pinMode(GPIO_PIN_A, INPUT_PULLUP);
   pinMode(GPIO_PIN_B, INPUT_PULLUP);
-  pinMode(GPIO_POUT_A, OUTPUT);
 
-  attachInterrupt(GPIO_PIN_A, changeAInterrupt, CHANGE);
-  attachInterrupt(GPIO_PIN_B, changeBInterrupt, CHANGE);
+  pinMode(GPIO_POUT_A, OUTPUT);
 }
 
 void changeAInterrupt() {
@@ -195,5 +196,19 @@ void loop(void){
     Udp.write("SWITCH1->B TOGGLE");
     Udp.endPacket();  
   }
+
+  int a = digitalRead(GPIO_PIN_A);
+  int b = digitalRead(GPIO_PIN_B);
+
+  if (port_a_value != a) {
+    changeAInterrupt();
+  }
+
+  if (port_b_value != b) {
+    changeBInterrupt();
+  }
+  
+  port_a_value = a;
+  port_b_value = b;
   
 }
