@@ -312,7 +312,7 @@ void handleNotFound() {
 }
 
 void setupHTTPActions() {
-  // server.on("/", indexPage);
+  server.on("/", indexPage);
 
   server.on("/switchOn", [](){
     server.send(200, "text/plain", "switch on");
@@ -439,25 +439,22 @@ void setup(void) {
   SPIFFS.begin();
 
   // WiFi.softAP("multi-sensor");
-
-  //WiFi.mode(WIFI_STA);
+  WiFi.mode(WIFI_STA);
 
   WiFi.hostname("multi-sensor");
 
   WiFi.begin(ssid, password);
 
   // Wait for connection
-  /* while (WiFi.status() != WL_CONNECTED) {
+  while (WiFi.status() != WL_CONNECTED) {
     delay(500);
-  }*/
-
-  delay(10000);
+  }
 
   MDNS.begin(host);
 
   setupHTTPActions();
 
-  setupFSBrowser();
+  // setupFSBrowser();
 
   httpUpdater.setup(&server);
 
@@ -862,15 +859,12 @@ void sendSensorData(const char *sensor, const char *type, uint32_t value) {
 
     http.end(); */
 
-    return;
-
-    /* char data[127];
+    char data[127];
     sprintf(data, "{\"sensor\": \"%s\",\"channel\": \"%s\",\"value\": %d}", sensor, type, value);
 
     if (!sensorPublisher.publish(data)) {
       sendData("MQTT push failed\n");
     } else {
       sendData("MQTT push successfull\n");
-    }*/
-    
+    }
 }

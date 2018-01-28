@@ -3,14 +3,13 @@
 #include <ESP8266WebServer.h>
 #include <ESP8266mDNS.h>
 #include <WiFiUDP.h>
+#include <WiFiConfig.h>
+#include <ESP8266HTTPUpdateServer.h>
 
 #define GPIO_PIN_A 10
 #define GPIO_POUT_A 4
 
 #define GPIO_PIN_B 5
-
-const char* ssid = "DEFENDOR";
-const char* password = "****";
 
 volatile unsigned long trigger_at_a_millis = 0;
 volatile unsigned long trigger_at_b_millis = 0;
@@ -28,6 +27,7 @@ IPAddress ipMulti(239, 0, 0, 1);
 unsigned int portMulti = 6000;      // local port to listen on
 
 ESP8266WebServer server(80);
+ESP8266HTTPUpdateServer httpUpdater;
 
 void indexPage() {
   String message = "<!doctype html>";
@@ -37,10 +37,29 @@ void indexPage() {
   message += "</head>";
 
   message += "<body>";
+
+  uint32_t realSize = ESP.getFlashChipRealSize();
+  uint32_t ideSize = ESP.getFlashChipSize();
+  uint32_t chipId = ESP.getFlashChipId();
+  uint32_t chipSpeed = ESP.getFlashChipSpeed();
+  FlashMode_t ideMode = ESP.getFlashChipMode();
+
+  char buf[255];
+
+  sprintf(buf, "Flash chip id: %08X<br/>Flash chip speed: %u<br/>Flash chip size: %u<br/>Flash ide mode: %s<br/>Flash real size: %u<br/>",
+    chipId, 
+    chipSpeed,
+    ideSize,
+    (ideMode == FM_QIO ? "QIO" : ideMode == FM_QOUT ? "QOUT" : ideMode == FM_DIO ? "DIO" : ideMode == FM_DOUT ? "DOUT" : "UNKNOWN"),
+    realSize);
+    
+  message += buf;
+  
   message += "<a href=\"/switchOn\">switchOn</a><br/>";
   message += "<a href=\"/switchOff\">switchOff</a><br/>";
   message += "<a href=\"/switchToggle\">switchToggle</a><br/>";
   message += "<a href=\"/status\">status</a><br/>";
+  message += "<form method='POST' action='/update' enctype='multipart/form-data'><input type='file' name='update'><input type='submit' value='Update'></form>";
   message += "</body>";
   
   message += "</html>";
@@ -114,6 +133,8 @@ void setup(void) {
   });
 
   server.onNotFound(handleNotFound);
+
+  httpUpdater.setup(&server);
 
   server.begin();
   Serial.println("HTTP server started");
