@@ -7,7 +7,9 @@
 #include <ESP8266HTTPClient.h>
 #include <WiFiConfig.h>
 
-#define DEVICE_ID      "2"
+#include <FadeLed.h>
+
+#define DEVICE_ID      "1"
 
 #define GPIO_POUT_R     14
 #define GPIO_POUT_G     16
@@ -26,6 +28,10 @@ unsigned int portMulti = 6001;
 
 volatile bool udpConnected = false;
 char udpPacketBuffer[UDP_TX_PACKET_MAX_SIZE]; //buffer to hold incoming packet,
+
+FadeLed redLed(GPIO_POUT_R);
+FadeLed greenLed(GPIO_POUT_G);
+FadeLed blueLed(GPIO_POUT_B);
 
 void indexPage() {
   String message = "<!doctype html>";
@@ -83,6 +89,28 @@ void setupHTTPActions() {
     server.send(200, "text/plain", "changed value"); 
   });
 
+  server.on("/setFadeValue", [](){
+    int valueR = server.arg("r").toInt();
+    int valueG = server.arg("g").toInt();
+    int valueB = server.arg("b").toInt();
+    
+    redLed.set(valueR);
+    greenLed.set(valueG);
+    blueLed.set(valueB);
+    
+    server.send(200, "text/plain", "changed value"); 
+  });
+
+  server.on("/setTimeout", [](){
+    int value = server.arg("v").toInt();
+    
+    redLed.setTime(value, true);
+    greenLed.setTime(value, true);
+    blueLed.setTime(value, true);
+    
+    server.send(200, "text/plain", "changed value"); 
+  });
+
   // Not found handler
   server.onNotFound(handleNotFound);
 }
@@ -100,9 +128,13 @@ void setupGPIO() {
   pinMode(GPIO_POUT_B, OUTPUT);
   digitalWrite(GPIO_POUT_B, LOW);
 
-  analogWrite(GPIO_POUT_R, 100);
-  analogWrite(GPIO_POUT_G, 100);
-  analogWrite(GPIO_POUT_B, 100);
+  analogWrite(GPIO_POUT_R, 0);
+  analogWrite(GPIO_POUT_G, 0);
+  analogWrite(GPIO_POUT_B, 0);
+
+  redLed.setTime(3000, true);
+  greenLed.setTime(3000, true);
+  blueLed.setTime(3000, true);
 }
 
 // connect to UDP – returns true if successful or false if not
@@ -163,4 +195,5 @@ void handleUDP() {
 void loop(void) {
   server.handleClient();
   handleUDP();
+  FadeLed::update();
 }
