@@ -7,7 +7,7 @@
 #include <ESP8266HTTPClient.h>
 #include <WiFiConfig.h>
 
-#define DEVICE_ID      "1"
+#define DEVICE_ID      "2"
 
 #define GPIO_POUT      12
 
@@ -33,14 +33,37 @@ void indexPage() {
   message += "<head>";
   message += "<title>ESP8266 Switch Mod "DEVICE_ID"</title>";
   message += "</head>";
+  message += "<body>";
+  
   message += "<form method='POST' action='/update' enctype='multipart/form-data'><input type='file' name='update'><input type='submit' value='Update'></form>";
+
+  message += "--------------------------------------------------------------<br/>";
 
   message += "<a href=\"/switchOn\">switchOn</a><br/>";
   message += "<a href=\"/switchOff\">switchOff</a><br/>";
   message += "<a href=\"/switchToggle\">switchToggle</a><br/>";
   message += "<a href=\"/status\">status</a><br/>";
+
+  uint32_t realSize = ESP.getFlashChipRealSize();
+  uint32_t ideSize = ESP.getFlashChipSize();
+  uint32_t chipId = ESP.getFlashChipId();
+  uint32_t chipSpeed = ESP.getFlashChipSpeed();
+  FlashMode_t ideMode = ESP.getFlashChipMode();
+
+  char buf[255];
+
+  message += "--------------------------------------------------------------<br/>";
+
+  sprintf(buf, "Flash chip id: %08X<br/>Flash chip speed: %u<br/>Flash chip size: %u<br/>Flash ide mode: %s<br/>Flash real size: %u<br/>",
+    chipId, 
+    chipSpeed,
+    ideSize,
+    (ideMode == FM_QIO ? "QIO" : ideMode == FM_QOUT ? "QOUT" : ideMode == FM_DIO ? "DIO" : ideMode == FM_DOUT ? "DOUT" : "UNKNOWN"),
+    realSize);
+
+  message += buf;
   
-  message += "<body>";
+  message += "--------------------------------------------------------------<br/>";
 
   /*
     Signal Strength TL;DR   Required for
