@@ -2,12 +2,11 @@
 #include <WiFiClient.h>
 #include <ESP8266WebServer.h>
 #include <ESP8266mDNS.h>
+#include <ESP8266HTTPUpdateServer.h>
 #include <WiFiUDP.h>
+#include <WiFiConfig.h>
 
 #define GPIO_POUT_A 5
-
-const char* ssid = "DEFENDOR";
-const char* password = "****";
 
 volatile bool udpConnected = false;
 volatile bool out_port_status = false;
@@ -22,6 +21,7 @@ IPAddress ipMulti(239, 0, 0, 1);
 unsigned int portMulti = 6000;      // local port to listen on
 
 ESP8266WebServer server(80);
+ESP8266HTTPUpdateServer httpUpdater;
 
 void indexPage() {
   String message = "<!doctype html>";
@@ -31,11 +31,46 @@ void indexPage() {
   message += "</head>";
 
   message += "<body>";
+  
+  message += "<form method='POST' action='/update' enctype='multipart/form-data'><input type='file' name='update'><input type='submit' value='Update'></form>";
+  message += "--------------------------------------------------------------<br/>";
+  
   message += "<a href=\"/switchOn\">switchOn</a><br/>";
   message += "<a href=\"/switchOff\">switchOff</a><br/>";
   message += "<a href=\"/switchToggle\">switchToggle</a><br/>";
   message += "<a href=\"/setLevel\">setLevel</a><br/>";
   message += "<a href=\"/status\">status</a><br/>";
+  message += "--------------------------------------------------------------<br/>";
+  
+  uint32_t realSize = ESP.getFlashChipRealSize();
+  uint32_t ideSize = ESP.getFlashChipSize();
+  uint32_t chipId = ESP.getFlashChipId();
+  uint32_t chipSpeed = ESP.getFlashChipSpeed();
+  FlashMode_t ideMode = ESP.getFlashChipMode();
+
+  char buf[255];
+  sprintf(buf, "Flash chip id: %08X<br/>Flash chip speed: %u<br/>Flash chip size: %u<br/>Flash ide mode: %s<br/>Flash real size: %u<br/>",
+    chipId, 
+    chipSpeed,
+    ideSize,
+    (ideMode == FM_QIO ? "QIO" : ideMode == FM_QOUT ? "QOUT" : ideMode == FM_DIO ? "DIO" : ideMode == FM_DOUT ? "DOUT" : "UNKNOWN"),
+    realSize);
+
+  message += buf;
+
+  message += "--------------------------------------------------------------<br/>";
+
+  /*
+    Signal Strength TL;DR   Required for
+    -30 dBm Amazing Max achievable signal strength. The client can only be a few feet from the AP to achieve this. Not typical or desirable in the real world.  N/A
+    -67 dBm Very Good Minimum signal strength for applications that require very reliable, timely delivery of data packets. VoIP/VoWiFi, streaming video
+    -70 dBm Okay  Minimum signal strength for reliable packet delivery. Email, web
+    -80 dBm Not Good  Minimum signal strength for basic connectivity. Packet delivery may be unreliable.  N/A
+    -90 dBm Unusable  Approaching or drowning in the noise floor. Any functionality is highly unlikely. N/A
+  */
+  message += "RSSI: ";
+  message.concat(WiFi.RSSI());
+  
   message += "</body>";
   
   message += "</html>";
@@ -59,6 +94,8 @@ void handleNotFound() {
 
 void setup(void) {
   Serial.begin(115200);
+
+  WiFi.mode(WIFI_STA);
 
   WiFi.begin(ssid, password);
   Serial.println("");
@@ -121,7 +158,10 @@ void setup(void) {
 
   server.onNotFound(handleNotFound);
 
+  httpUpdater.setup(&server);
+
   server.begin();
+  
   Serial.println("HTTP server started");
 
   pinMode(GPIO_POUT_A, OUTPUT);
