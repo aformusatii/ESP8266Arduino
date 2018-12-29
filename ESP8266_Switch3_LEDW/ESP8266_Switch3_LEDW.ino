@@ -5,6 +5,7 @@
 #include <ESP8266HTTPUpdateServer.h>
 #include <WiFiUDP.h>
 #include <WiFiConfig.h>
+#include <ESP8266HTTPClient.h>
 
 #define GPIO_POUT_A 5
 
@@ -154,6 +155,69 @@ void setup(void) {
     out_port_status = value > 0;
     Serial.println(value);
     server.send(200, "text/plain", "change level"); 
+  });
+
+  server.on("/setSpeed", [](){
+    String url = server.arg("url");
+
+    WiFiClient client;
+    HTTPClient http;
+    http.begin(client, url);
+
+    int httpCode = http.GET();
+
+    String message = "";
+    
+    if (httpCode == HTTP_CODE_OK) {
+        // get lenght of document (is -1 when Server sends no Content-Length header)
+        int len = http.getSize();
+        int total_len = http.getSize();
+
+        // create buffer for read
+        uint8_t buff[2000] = { 0 };
+
+        // get tcp stream
+        WiFiClient * stream = &client;
+
+        unsigned long start = millis();
+
+        // read all data from server
+        while (http.connected() && (len > 0 || len == -1)) {
+          // get available data size
+          size_t size = stream->available();
+
+          if (size) {
+            int c = stream->readBytes(buff, ((size > sizeof(buff)) ? sizeof(buff) : size));
+
+            if (len > 0) {
+              len -= c;
+            }
+          }
+        }
+
+        unsigned long elapsed = millis() - start;
+
+        message += "{\n";
+        message += "\"totalBytes\": ";
+        message += total_len;
+        message += ",\n";
+        message += "\"totalElapsed\": ";
+        message += elapsed; 
+        message += ",\n";
+        message += "\"bytesPerSecond\": ";
+        message += ( (total_len * 1000) / elapsed );
+        message += "\n";
+        message += "}";
+    } else {
+        message += "{\n";
+        message += "\"httpCode\": ";
+        message += httpCode;
+        message += "}";
+    }
+
+    http.end();
+    
+    server.send(200, "application/json", message); 
   });
 
   server.onNotFound(handleNotFound);
