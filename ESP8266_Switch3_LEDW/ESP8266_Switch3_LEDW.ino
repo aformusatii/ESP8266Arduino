@@ -228,6 +228,7 @@ void setup(void) {
   
   Serial.println("HTTP server started");
 
+  analogWriteFreq(50000);
   pinMode(GPIO_POUT_A, OUTPUT);
 }
 
