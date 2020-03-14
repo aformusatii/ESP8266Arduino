@@ -7,7 +7,7 @@
 #include <ESP8266HTTPClient.h>
 #include <WiFiConfig.h>
 
-#define DEVICE_ID      "2"
+#define DEVICE_ID      "3"
 
 #define GPIO_POUT      12
 

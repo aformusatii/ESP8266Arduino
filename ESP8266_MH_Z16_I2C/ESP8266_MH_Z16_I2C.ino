@@ -250,7 +250,7 @@ void indexPage() {
   String message = "<!doctype html>";
   message += "<html lang=\"en\">";
   message += "<head>";
-  message += "<title>ESP8266 MH-Z16 Sensor</title>";
+  message += "<title>ESP8266 MH-Z16 Sensor v0.2</title>";
   message += "</head>";
 
   message += "<form method='POST' action='/update' enctype='multipart/form-data'><input type='file' name='update'><input type='submit' value='Update'></form>";
@@ -267,6 +267,10 @@ void indexPage() {
   */
   message += "RSSI: ";
   message.concat(WiFi.RSSI());
+  message += "<br/>";
+
+  message += "BSSID MAC: ";
+  message.concat(WiFi.BSSIDstr());
   message += "<br/>";
 
   uint32_t realSize = ESP.getFlashChipRealSize();
@@ -375,6 +379,20 @@ void setupHTTPActions() {
       sprintf(buf, "{\"value\":%u}", radiation_value);
       server.send(200, "application/json", buf);     
     }
+  });
+
+  server.on("/sensors", [](){
+    char buf[255];
+    String callback = server.arg("callback");
+
+    sprintf(buf, "{\"rad\": %u, \"pm_1_0\": %u, \"pm_2_5\": %u, \"pm_10_0\": %u, \"co2\": %u}",
+            radiation_value,
+            pm_1_0_value,
+            pm_2_5_value,
+            pm_10_0_value,
+            co2_ppm);
+    
+    server.send(200, "application/json", buf);     
   });
 
   // Not found handler
