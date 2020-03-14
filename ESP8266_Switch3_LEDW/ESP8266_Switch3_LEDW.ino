@@ -28,7 +28,7 @@ void indexPage() {
   String message = "<!doctype html>";
   message += "<html lang=\"en\">";
   message += "<head>";
-  message += "<title>ESP8266 Switch 3 Controller</title>";
+  message += "<title>ESP8266 Switch 3 Controller v0.2</title>";
   message += "</head>";
 
   message += "<body>";
@@ -71,6 +71,9 @@ void indexPage() {
   */
   message += "RSSI: ";
   message.concat(WiFi.RSSI());
+
+  message += "<br/>BSSID MAC: ";
+  message.concat(WiFi.BSSIDstr());
   
   message += "</body>";
   
