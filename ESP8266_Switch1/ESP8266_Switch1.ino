@@ -36,11 +36,13 @@ void indexPage() {
   String message = "<!doctype html>";
   message += "<html lang=\"en\">";
   message += "<head>";
-  message += "<title>ESP8266 Switch 1 Controller</title>";
+  message += "<title>ESP8266 Switch 1 Controller v0.2</title>";
   message += "</head>";
 
   message += "<body>";
 
+  message += "--------------------------------------------------------------<br/>";
+  
   uint32_t realSize = ESP.getFlashChipRealSize();
   uint32_t ideSize = ESP.getFlashChipSize();
   uint32_t chipId = ESP.getFlashChipId();
@@ -48,15 +50,38 @@ void indexPage() {
   FlashMode_t ideMode = ESP.getFlashChipMode();
 
   char buf[255];
-
   sprintf(buf, "Flash chip id: %08X<br/>Flash chip speed: %u<br/>Flash chip size: %u<br/>Flash ide mode: %s<br/>Flash real size: %u<br/>",
     chipId, 
     chipSpeed,
     ideSize,
     (ideMode == FM_QIO ? "QIO" : ideMode == FM_QOUT ? "QOUT" : ideMode == FM_DIO ? "DIO" : ideMode == FM_DOUT ? "DOUT" : "UNKNOWN"),
     realSize);
-    
+
   message += buf;
+
+  message += "--------------------------------------------------------------<br/>";
+
+  /*
+    Signal Strength TL;DR   Required for
+    -30 dBm Amazing Max achievable signal strength. The client can only be a few feet from the AP to achieve this. Not typical or desirable in the real world.  N/A
+    -67 dBm Very Good Minimum signal strength for applications that require very reliable, timely delivery of data packets. VoIP/VoWiFi, streaming video
+    -70 dBm Okay  Minimum signal strength for reliable packet delivery. Email, web
+    -80 dBm Not Good  Minimum signal strength for basic connectivity. Packet delivery may be unreliable.  N/A
+    -90 dBm Unusable  Approaching or drowning in the noise floor. Any functionality is highly unlikely. N/A
+  */
+  message += "RSSI: ";
+  message.concat(WiFi.RSSI());
+  message += "<br/>";
+
+  message += "BSSID MAC: ";
+  message.concat(WiFi.BSSIDstr());
+  message += "<br/>";
+
+  message += "WIFI MAC: ";
+  message.concat(WiFi.macAddress());
+  message += "<br/>";
+
+  message += "--------------------------------------------------------------<br/>";
   
   message += "<a href=\"/switchOn\">switchOn</a><br/>";
   message += "<a href=\"/switchOff\">switchOff</a><br/>";
@@ -86,6 +111,8 @@ void handleNotFound() {
 
 void setup(void) {
   Serial.begin(115200);
+
+  WiFi.mode(WIFI_STA);
 
   WiFi.begin(ssid, password);
   Serial.println("");

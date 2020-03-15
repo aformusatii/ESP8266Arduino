@@ -71,9 +71,15 @@ void indexPage() {
   */
   message += "RSSI: ";
   message.concat(WiFi.RSSI());
+  message += "<br/>";
 
-  message += "<br/>BSSID MAC: ";
+  message += "BSSID MAC: ";
   message.concat(WiFi.BSSIDstr());
+  message += "<br/>";
+
+  message += "WIFI MAC: ";
+  message.concat(WiFi.macAddress());
+  message += "<br/>";
   
   message += "</body>";
   
