@@ -4,6 +4,7 @@
 #include <ESP8266mDNS.h>
 #include <ESP8266HTTPUpdateServer.h>
 #include <WiFiUDP.h>
+#include <WiFiConfig.h>
 
 #define GPIO_PIN_A_1   5
 #define GPIO_PIN_A_2   14
@@ -14,8 +15,6 @@
 #define GPIO_POUT_B    12
 
 const char* host = "switch4";
-const char* ssid = "DEFENDOR";
-const char* password = "****";
 
 volatile unsigned long wifi_check_status_millis = 0;
 volatile unsigned long wifi_check_rssi_millis = 0;
@@ -48,10 +47,30 @@ void indexPage() {
   String message = "<!doctype html>";
   message += "<html lang=\"en\">";
   message += "<head>";
-  message += "<title>ESP8266 Switch 4 Controller</title>";
+  message += "<title>ESP8266 Switch 4 Controller v0.2</title>";
   message += "</head>";
 
   message += "<body>";
+
+  message += "--------------------------------------------------------------<br/>";
+  
+  uint32_t realSize = ESP.getFlashChipRealSize();
+  uint32_t ideSize = ESP.getFlashChipSize();
+  uint32_t chipId = ESP.getFlashChipId();
+  uint32_t chipSpeed = ESP.getFlashChipSpeed();
+  FlashMode_t ideMode = ESP.getFlashChipMode();
+
+  char buf[255];
+  sprintf(buf, "Flash chip id: %08X<br/>Flash chip speed: %u<br/>Flash chip size: %u<br/>Flash ide mode: %s<br/>Flash real size: %u<br/>",
+    chipId, 
+    chipSpeed,
+    ideSize,
+    (ideMode == FM_QIO ? "QIO" : ideMode == FM_QOUT ? "QOUT" : ideMode == FM_DIO ? "DIO" : ideMode == FM_DOUT ? "DOUT" : "UNKNOWN"),
+    realSize);
+
+  message += buf;
+
+  message += "--------------------------------------------------------------<br/>";
 
   /*
     Signal Strength TL;DR   Required for
@@ -64,6 +83,16 @@ void indexPage() {
   message += "RSSI: ";
   message.concat(WiFi.RSSI());
   message += "<br/>";
+
+  message += "BSSID MAC: ";
+  message.concat(WiFi.BSSIDstr());
+  message += "<br/>";
+
+  message += "WIFI MAC: ";
+  message.concat(WiFi.macAddress());
+  message += "<br/>";
+
+  message += "--------------------------------------------------------------<br/>";
   
   message += "<a href=\"/switchOnA\">SwitchOn A</a><br/>";
   message += "<a href=\"/switchOffA\">SwitchOff A</a><br/>";
@@ -198,6 +227,8 @@ void setup(void) {
   setupGPIO();
   
   Serial.begin(115200);
+
+  WiFi.mode(WIFI_STA);
 
   WiFi.begin(ssid, password);
   Serial.println("");

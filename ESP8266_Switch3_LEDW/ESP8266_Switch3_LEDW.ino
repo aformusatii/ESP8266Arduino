@@ -80,6 +80,8 @@ void indexPage() {
   message += "WIFI MAC: ";
   message.concat(WiFi.macAddress());
   message += "<br/>";
+
+  message += "--------------------------------------------------------------<br/>";
   
   message += "</body>";
   
