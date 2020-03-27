@@ -6,6 +6,7 @@
 #include <WiFiConfig.h>
 #include <ESP8266HTTPUpdateServer.h>
 
+
 #define GPIO_PIN_A 10
 #define GPIO_POUT_A 4
 
@@ -36,7 +37,7 @@ void indexPage() {
   String message = "<!doctype html>";
   message += "<html lang=\"en\">";
   message += "<head>";
-  message += "<title>ESP8266 Switch 1 Controller v0.2</title>";
+  message += "<title>ESP8266 Switch 1 Controller v0.3</title>";
   message += "</head>";
 
   message += "<body>";
@@ -218,10 +219,18 @@ void loop(void){
   if (port_b_trigger && (trigger_at_b_millis < millis())) {
     port_b_trigger = false;
     Serial.println("B");
+
+    Udp.beginPacketMulticast(ipMulti, portMulti, WiFi.localIP());
+    Udp.write("BLA");
+    Udp.endPacket();
+
+    Udp.beginPacketMulticast(ipMulti, portMulti, WiFi.localIP());
+    Udp.write("BLA");
+    Udp.endPacket();
     
     Udp.beginPacketMulticast(ipMulti, portMulti, WiFi.localIP());
     Udp.write("SWITCH1->B TOGGLE");
-    Udp.endPacket();  
+    Udp.endPacket();
   }
 
   int a = digitalRead(GPIO_PIN_A);
