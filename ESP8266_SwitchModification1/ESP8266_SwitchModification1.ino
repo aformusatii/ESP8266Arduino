@@ -3,29 +3,20 @@
 #include <ESP8266WebServer.h>
 #include <ESP8266mDNS.h>
 #include <ESP8266HTTPUpdateServer.h>
-#include <WiFiUDP.h>
-#include <ESP8266HTTPClient.h>
-#include <WiFiConfig.h>
+#include <WiFiManager.h>
 
-#define DEVICE_ID      "3"
+#define DEVICE_ID      "2"
 
 #define GPIO_POUT      12
 
 const char* host = "switch-mod-"DEVICE_ID;
 
+const char *ap_ssid = "switch-mod-"DEVICE_ID;
+
 ESP8266WebServer server(80);
 ESP8266HTTPUpdateServer httpUpdater;
 
-// A UDP instance to let us send and receive packets over UDP
-WiFiUDP Udp;
-
-// UDP local port to listen on
-unsigned int portMulti = 6001;
-
 volatile bool out_port_status = false;
-
-volatile bool udpConnected = false;
-char udpPacketBuffer[UDP_TX_PACKET_MAX_SIZE]; //buffer to hold incoming packet,
 
 void indexPage() {
   String message = "<!doctype html>";
@@ -146,14 +137,6 @@ void setupGPIO() {
   digitalWrite(GPIO_POUT, LOW);
 }
 
-// connect to UDP – returns true if successful or false if not
-void connectUDP() {
-    Serial.println("Connecting to UDP");
-    
-    udpConnected = Udp.begin(portMulti);
-    Serial.println("Connected to UDP");
-}
-
 void setup(void) {
   setupGPIO();
 
@@ -161,20 +144,17 @@ void setup(void) {
   
   Serial.begin(115200);
 
-  WiFi.mode(WIFI_STA);
+  // WiFi.mode(WIFI_STA);
 
-  WiFi.hostname(host);
-
-  WiFi.begin(ssid, password);
+  WiFiManager wifiManager;
+  wifiManager.setTimeout(120);
 
   Serial.print("Connecting to WiFi");
 
-  // Wait for connection
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
+  if (!wifiManager.autoConnect(ap_ssid)) {
+    Serial.println("Could not auto connect to WiFi"); 
+    delay(2000);
   }
-
-  connectUDP();
 
   Serial.println("Connected to WiFi");
   Serial.println(WiFi.localIP());
@@ -190,16 +170,7 @@ void setup(void) {
   MDNS.addService("http", "tcp", 80);
 }
 
-void handleUDP() {
-  if(udpConnected) {
-    int packetSize = Udp.parsePacket();
-    if(packetSize) {
-    }
-  }
-}
-
 // ============= Main Loop =============
 void loop(void) {
   server.handleClient();
-  handleUDP();
 }
