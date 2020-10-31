@@ -1,0 +1,59 @@
+addressSucceed: 4096 - 0x1000
+j = 2
+addressSucceed: 8192 - 0x2000
+j = 3
+addressSucceed: 12288 - 0x3000
+j = 4
+addressSucceed: 16384 - 0x4000
+j = 5
+addressSucceed: 20480 - 0x5000
+j = 6
+addressSucceed: 24576 - 0x6000
+j = 7
+addressSucceed: 28672 - 0x7000
+j = 8
+addressSucceed: 32768 - 0x8000
+j = 9
+addressSucceed: 36864 - 0x9000
+j = 10
+addressSucceed: 40960 - 0xa000
+j = 11
+addressSucceed: 45056 - 0xb000
+j = 12
+addressSucceed: 49152 - 0xc000
+j = 13
+addressSucceed: 53248 - 0xd000
+j = 14
+addressSucceed: 57344 - 0xe000
+j = 15
+addressSucceed: 61440 - 0xf000
+
+--------------- CUT HERE FOR EXCEPTION DECODER ---------------
+
+Exception (0):
+epc1=0x40210a94 epc2=0x00000000 epc3=0x00000000 excvaddr=0x00000000 depc=0x00000000
+
+>>>stack>>>
+
+ctx: sys
+sp: 3ffffd80 end: 3fffffb0 offset: 0190
+3fffff10:  4020c578 000103dd 3ffef514 40214e60  
+3fffff20:  4023a114 00005e7e ffffffff 4020b885  
+3fffff30:  03f71942 3ffedc90 3ffedc68 4020c720  
+3fffff40:  4022cf0c 3ffedc68 3ffedc90 60000600  
+3fffff50:  03f71942 3ffedc90 3ffedc68 4022cf19  
+3fffff60:  4022cf5e 3fffdab0 00000000 3fffdcb0  
+3fffff70:  3ffedca0 3fffdad0 3ffef418 40201d30  
+3fffff80:  40000f49 faa3e8b2 3fffdab0 40000f49  
+3fffff90:  40000e19 00000005 000429bc 00000000  
+3fffffa0:  00000000 aa55aa55 000000ee 40104968  
+<<<stack<<<
+
+--------------- CUT HERE FOR EXCEPTION DECODER ---------------
+
+ ets Jan  8 2013,rst cause:1, boot mode:(1,6)
+
+
+ ets Jan  8 2013,rst cause:4, boot mode:(1,6)
+
+wdt reset
