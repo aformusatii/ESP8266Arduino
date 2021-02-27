@@ -5,6 +5,7 @@
 #include <ESP8266HTTPUpdateServer.h>
 #include <WiFiConfig.h>
 #include <ESP8266HTTPClient.h>
+#include <EEPROM.h> 
 
 // https://www.esp8266.com/wiki/doku.php?id=esp8266_gpio_pin_allocations
 #define GPIO_POUT_PWD_FREQUENCY 500
@@ -18,12 +19,20 @@ volatile int port_input_value = UNKNOWN_STATE;
 #define LED_ON       1
 #define LED_COMPLETE 2
 
+#define LED_MAX_VALUE_LOW 100
+#define LED_MAX_VALUE_HIGH 1023
+
+#define EEPROM_START_ADDR 0
+
+#define AUTO_SHUTOFF_PERIOD_LOW 1
+#define AUTO_SHUTOFF_PERIOD_HIGH 120
+
 volatile char led_state = LED_COMPLETE;
 volatile int pmw_level = 0;
 volatile int pmw_max_level = 1023;
-volatile unsigned long lastLedTime = 0;
-
-volatile unsigned long autoShutOffTime = 0;
+volatile unsigned long last_led_time = 0;
+volatile unsigned long auto_shutoff_time = 0;
+volatile int auto_shutoff_period = 30;
 
 ESP8266WebServer server(80);
 ESP8266HTTPUpdateServer httpUpdater;
@@ -32,7 +41,7 @@ void indexPage() {
   String message = "<!doctype html>";
   message += "<html lang=\"en\">";
   message += "<head>";
-  message += "<title>ESP8266 New Kitchen Backlight Controller v0.1</title>";
+  message += "<title>ESP8266 New Kitchen Backlight Controller v0.2</title>";
   message += "</head>";
 
   message += "<body>";
@@ -111,10 +120,12 @@ void handleNotFound() {
 
 void setup(void) {
   setupGPIO();
+
+  initEEPROM();
   
   //Serial.begin(115200);
   Serial.begin(115200,SERIAL_8N1,SERIAL_TX_ONLY);
-
+  
   WiFi.mode(WIFI_STA);
 
   WiFi.begin(ssid, password);
@@ -145,6 +156,30 @@ void setup(void) {
   Serial.println("HTTP server started");  
 }
 
+void initEEPROM() {
+  EEPROM.begin(512);
+
+  // Read previous value
+  EEPROM.get(EEPROM_START_ADDR, pmw_max_level);
+
+  // In case value read is out of range apply correction and save to EEPROM
+  if ((pmw_max_level < LED_MAX_VALUE_LOW) || (pmw_max_level > LED_MAX_VALUE_HIGH)) {
+    pmw_max_level = LED_MAX_VALUE_HIGH;
+    EEPROM.put(EEPROM_START_ADDR, pmw_max_level);
+  }
+
+  // Read previous value
+  EEPROM.get(EEPROM_START_ADDR + sizeof(int), auto_shutoff_period);
+
+  // In case value read is out of range apply correction and save to EEPROM
+  if ((auto_shutoff_period < AUTO_SHUTOFF_PERIOD_LOW) || (auto_shutoff_period > AUTO_SHUTOFF_PERIOD_HIGH)) {
+    auto_shutoff_period = AUTO_SHUTOFF_PERIOD_HIGH;
+    EEPROM.put(EEPROM_START_ADDR + sizeof(int), auto_shutoff_period);
+  }
+
+  EEPROM.commit();
+}
+
 void setupGPIO() {
   analogWriteFreq(GPIO_POUT_PWD_FREQUENCY);
   pinMode(GPIO_POUT, OUTPUT);
@@ -162,11 +197,16 @@ void setupHttpHandlers() {
     String valueStr = server.arg("value");
     int value = valueStr.toInt();
 
-    if (value > 100 && value < 1024) {
+    if ((value >= LED_MAX_VALUE_LOW) && (value <= LED_MAX_VALUE_HIGH)) {
       // set new max level
       pmw_max_level = value;
       // apply changes
       led_state = LED_ON;
+      
+      // set to EEPROM value
+      EEPROM.put(EEPROM_START_ADDR, pmw_max_level);
+      EEPROM.commit();
+      
       server.send(200, "text/plain", "OK"); 
     } else {
       server.send(400, "text/plain", "Invalid value"); 
@@ -178,11 +218,39 @@ void setupHttpHandlers() {
     server.send(200, "text/plain", content);
   });
 
+  server.on("/setAutoShutOffPeriod", [](){
+    String valueStr = server.arg("value");
+    int value = valueStr.toInt();
+
+    if ((value >= AUTO_SHUTOFF_PERIOD_LOW) && (value <= AUTO_SHUTOFF_PERIOD_HIGH)) {
+      // set new max level
+      auto_shutoff_period = value;
+      
+      // set to EEPROM value
+      EEPROM.put(EEPROM_START_ADDR + sizeof(int), auto_shutoff_period);
+      EEPROM.commit();
+      
+      server.send(200, "text/plain", "OK"); 
+    } else {
+      server.send(400, "text/plain", "Invalid value"); 
+    }
+  });
+
+  server.on("/getAutoShutOffPeriod", [](){
+    String content = String(auto_shutoff_period);
+    server.send(200, "text/plain", content);
+  });
+
   server.on("/setLevel", [](){
     String valueStr = server.arg("value");
     int value = valueStr.toInt();
     analogWrite(GPIO_POUT, value);
     server.send(200, "text/plain", "OK"); 
+  });
+
+  server.on("/getLevel", [](){
+    String content = String(pmw_level);
+    server.send(200, "text/plain", content);
   });
 
   server.on("/setLedState", [](){
@@ -232,12 +300,12 @@ void changeLedState() {
   
   unsigned long currentTime = micros();
 
-  if ((currentTime - lastLedTime) < 500) {
+  if ((currentTime - last_led_time) < 500) {
     // not the time yet
     return;
   }
 
-  lastLedTime = currentTime;
+  last_led_time = currentTime;
 
   switch(led_state) {
     // ----------- LED OFF ----------- 
@@ -269,7 +337,7 @@ void changeLedState() {
 
 void autoShutOff() {
   if (pmw_level < 200) {
-    autoShutOffTime = millis();
+    auto_shutoff_time = millis();
     
     // led is not turned on
     return;
@@ -277,7 +345,7 @@ void autoShutOff() {
 
   unsigned long currentTime = millis();
 
-  if ((currentTime - autoShutOffTime) < (30 * 60000)) {
+  if ((currentTime - auto_shutoff_time) < (auto_shutoff_period * 60000)) {
     // time is not yet up, exit
     return;  
   }
