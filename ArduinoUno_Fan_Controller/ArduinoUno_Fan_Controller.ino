@@ -83,11 +83,11 @@ byte getDutyByTemperature(float temperatureC) {
     return 50;  
   }
 
-  if (temperatureC > 45) {
+  if (temperatureC > 40) {
     return 30;  
   }
 
-  if (temperatureC > 40) {
+  if (temperatureC > 35) {
     return 10;  
   }
 
