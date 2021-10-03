@@ -41,7 +41,7 @@ void indexPage() {
   String message = "<!doctype html>";
   message += "<html lang=\"en\">";
   message += "<head>";
-  message += "<title>ESP8266 New Kitchen Backlight Controller v0.2</title>";
+  message += "<title>ESP8266 New Kitchen Backlight Controller v0.3</title>";
   message += "</head>";
 
   message += "<body>";
@@ -257,6 +257,7 @@ void setupHttpHandlers() {
     String valueStr = server.arg("value");
     int value = valueStr.toInt();
     led_state = (value) ? LED_ON : LED_OFF;
+    reset_auto_shutoff();
     server.send(200, "text/plain", "OK"); 
   });
 
@@ -335,9 +336,13 @@ void changeLedState() {
   analogWrite(GPIO_POUT, pmw_level);
 }
 
+void reset_auto_shutoff() {
+  auto_shutoff_time = millis();
+}
+
 void autoShutOff() {
   if (pmw_level < 200) {
-    auto_shutoff_time = millis();
+    reset_auto_shutoff();
     
     // led is not turned on
     return;

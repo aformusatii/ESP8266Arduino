@@ -6,13 +6,20 @@
 #include <WiFiConfig.h>
 #include <ESP8266HTTPClient.h>
 #include <RCSwitch.h>
+#include <WiFiUdp.h>
+#include <stdarg.h>
 
 ESP8266WebServer server(80);
 ESP8266HTTPUpdateServer httpUpdater;
 
+WiFiUDP UDP;
+
 RCSwitch mySwitch = RCSwitch();
 
 #define WIFI_CHECK_INTERVAL_MS 2000
+
+#define UDP_LOG_HOST "192.168.100.134"
+#define UDP_LOG_PORT 5000
 
 volatile unsigned long wifi_check_timer = 0;
 volatile char wifi_last_status = 255;
@@ -109,7 +116,7 @@ void setup(void) {
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
 
-  mySwitch.enableReceive(D8);
+  mySwitch.enableReceive(D5);
 }
 
 void setupAfterWiFiConnected(void) {
@@ -149,6 +156,8 @@ void handleWiFiSetup(void) {
     Serial.println(ssid);
     Serial.print("IP address: ");
     Serial.println(WiFi.localIP());
+
+    logf("IP address: %s", WiFi.localIP().toString().c_str());
     
     setupAfterWiFiConnected();
   }
@@ -165,8 +174,26 @@ void handleRFSwitch(void) {
     Serial.print("Protocol: ");
     Serial.println( mySwitch.getReceivedProtocol() );
 
+    logf("Received: %ld / %d", mySwitch.getReceivedValue(), mySwitch.getReceivedBitlength());
+    
     mySwitch.resetAvailable();
   }
+}
+
+char log_buffer1[150];
+char log_buffer2[200];
+
+void logf(const char * _format, ...) {
+    va_list args;
+    va_start(args,_format);
+    vsprintf(log_buffer1, _format, args);
+    va_end(args);
+    
+    sprintf(log_buffer2, "{\"message\": \"%s\", \"level\": \"INFO\", \"system\": \"led-controller-001\"}", log_buffer1);
+
+    UDP.beginPacket(UDP_LOG_HOST, UDP_LOG_PORT);
+    UDP.write(log_buffer2);
+    UDP.endPacket();
 }
 
 void loop(void) {
